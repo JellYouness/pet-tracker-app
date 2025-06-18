@@ -1,50 +1,87 @@
-# Welcome to your Expo app 👋
+# Pet Tracker App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Une application mobile pour suivre et gérer les animaux domestiques, développée avec React Native et Expo.
 
-## Get started
+## Fonctionnalités
 
-1. Install dependencies
+- 🔐 Authentification par scan de carte d'identité
+- 🏠 Écran d'accueil avec liste des animaux
+- 🐾 Gestion des animaux (ajout, modification, suppression)
+- 🔍 Recherche d'animaux
+- 📱 Interface utilisateur moderne
+- 🌐 Backend Supabase pour la persistance des données
+- 📷 Scan NFC pour l'identification des animaux
+- 📄 OCR pour la lecture des cartes d'identité
+
+## Prérequis
+
+- Node.js (v14 ou supérieur)
+- npm ou yarn
+- Expo CLI
+- Compte Supabase
+- Appareil mobile avec NFC (pour les fonctionnalités de scan)
+
+## Installation
+
+1. Cloner le dépôt :
+
+```bash
+git clone https://github.com/votre-username/pet-tracker-app.git
+cd pet-tracker-app
+```
+
+2. Installer les dépendances :
 
    ```bash
    npm install
-   ```
+# ou
+yarn install
+```
 
-2. Start the app
+3. Configurer les variables d'environnement :
+   Créez un fichier `.env` à la racine du projet avec les variables suivantes :
+
+```
+EXPO_PUBLIC_SUPABASE_URL=votre_url_supabase
+EXPO_PUBLIC_SUPABASE_ANON_KEY=votre_clé_anon_supabase
+```
+
+4. Lancer l'application :
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Structure du Projet
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+pet-tracker-app/
+├── app/                    # Dossier principal de l'application
+│   ├── (app)/             # Routes de l'application (authentifié)
+│   ├── (auth)/            # Routes d'authentification
+│   └── _layout.tsx        # Layout principal
+├── assets/                # Images et ressources
+├── components/            # Composants réutilisables
+├── constants/             # Constantes et thème
+├── lib/                   # Utilitaires et configurations
+└── types/                 # Types TypeScript
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Technologies Utilisées
 
-## Learn more
+- React Native
+- Expo
+- Supabase
+- TypeScript
+- Expo Router
+- Expo NFC
+- Expo Camera
+- Expo Document Scanner
 
-To learn more about developing your project with Expo, look at the following resources:
+## Contribution
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
 
-## Join the community
+## Licence
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MIT

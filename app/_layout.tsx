@@ -1,29 +1,29 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { useColorScheme } from "react-native";
+import { TamaguiProvider } from "tamagui";
+import { AuthProvider } from "../contexts/AuthContext";
+import tamaguiConfig from "../tamagui.config";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+// Import CSS after other imports
+// import "../global.css";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  useEffect(() => {
+    // Force a re-render when color scheme changes
+  }, [colorScheme]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <TamaguiProvider config={tamaguiConfig}>
+      {/* eslint-disable-next-line react/no-children-prop */}
+      <AuthProvider children={undefined}>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        </Stack>
+      </AuthProvider>
+    </TamaguiProvider>
   );
 }
