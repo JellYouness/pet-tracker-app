@@ -36,7 +36,7 @@ export default function AnimalDetailScreen() {
   useEffect(() => {
     fetchAnimal();
     fetchPendingTransfer();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchAnimal = async () => {
@@ -77,7 +77,6 @@ export default function AnimalDetailScreen() {
           setOwner(ownerData);
         }
       }
-
     } catch (err) {
       console.error("Error fetching animal:", err);
       setError(
@@ -561,9 +560,14 @@ export default function AnimalDetailScreen() {
                   </Text>
                 </XStack>
                 <LocationDisplay
+                  animalId={animal.id}
                   location={animal.locations}
                   onLocationRemoved={() => {
                     // Refresh the animal data when location is removed
+                    fetchAnimal();
+                  }}
+                  onLocationUpdated={() => {
+                    // Refresh the animal data when location is updated
                     fetchAnimal();
                   }}
                 />

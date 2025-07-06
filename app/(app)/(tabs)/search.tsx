@@ -89,7 +89,10 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8f9fa", padding: 16 }}>
+    <ScrollView
+      automaticallyAdjustKeyboardInsets
+      style={{ flex: 1, backgroundColor: "#f8f9fa", padding: 16 }}
+    >
       <Text
         style={{
           fontSize: 24,
@@ -288,6 +291,6 @@ export default function SearchScreen() {
           </ScrollView>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }

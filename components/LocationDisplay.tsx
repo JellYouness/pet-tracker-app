@@ -1,6 +1,14 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { locationUtils } from "../lib/locationUtils";
 import type { Database } from "../lib/supabase";
 
@@ -10,17 +18,20 @@ interface LocationDisplayProps {
   animalId?: string;
   location?: Location | null;
   onLocationRemoved?: () => void;
+  onLocationUpdated?: () => void;
 }
 
 export default function LocationDisplay({
   animalId,
   location: propLocation,
   onLocationRemoved,
+  onLocationUpdated,
 }: LocationDisplayProps) {
   const [location, setLocation] = useState<Location | null>(
     propLocation || null
   );
   const [loading, setLoading] = useState(!propLocation);
+  const [updatingLocation, setUpdatingLocation] = useState(false);
 
   useEffect(() => {
     if (propLocation) {
@@ -29,7 +40,7 @@ export default function LocationDisplay({
     } else if (animalId) {
       loadLocation();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animalId, propLocation]);
 
   const loadLocation = async () => {
@@ -46,19 +57,128 @@ export default function LocationDisplay({
     }
   };
 
+  const requestLocationPermission = async (): Promise<boolean> => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === "granted";
+  };
+
+  const getCurrentLocation =
+    async (): Promise<Location.LocationObject | null> => {
+      try {
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+          Alert.alert(
+            "Permission refusée",
+            "L'accès à la localisation est nécessaire pour mettre à jour la position de l'animal."
+          );
+          return null;
+        }
+
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+
+        return currentLocation;
+      } catch (error) {
+        console.error("Error getting current location:", error);
+        Alert.alert(
+          "Erreur de localisation",
+          "Impossible d'obtenir votre position actuelle. Veuillez réessayer."
+        );
+        return null;
+      }
+    };
+
+  const getAddressFromCoordinates = async (
+    latitude: number,
+    longitude: number
+  ): Promise<string | null> => {
+    try {
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const addressParts = [
+          address.street,
+          address.city,
+          address.region,
+          address.country,
+        ].filter(Boolean);
+        return addressParts.join(", ");
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting address:", error);
+      return null;
+    }
+  };
+
+  const updateLocationWithCurrentPosition = async () => {
+    if (!animalId) {
+      Alert.alert("Erreur", "ID de l'animal manquant");
+      return;
+    }
+
+    try {
+      setUpdatingLocation(true);
+
+      const currentLocation = await getCurrentLocation();
+      if (!currentLocation) {
+        return;
+      }
+
+      const address = await getAddressFromCoordinates(
+        currentLocation.coords.latitude,
+        currentLocation.coords.longitude
+      );
+
+      const locationData = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        address: address || undefined,
+      };
+
+      await locationUtils.setAnimalLocation(animalId, locationData);
+
+      // Reload the location data
+      await loadLocation();
+
+      onLocationUpdated?.();
+
+      Alert.alert(
+        "Position mise à jour",
+        "La position de l'animal a été mise à jour avec votre position actuelle."
+      );
+    } catch (error) {
+      console.error("Error updating location:", error);
+      Alert.alert(
+        "Erreur",
+        "Impossible de mettre à jour la position. Veuillez réessayer."
+      );
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
+
   const removeLocation = async () => {
     if (!animalId) {
-      Alert.alert("Error", "Cannot remove location without animal ID");
+      Alert.alert(
+        "Erreur",
+        "Impossible de supprimer la localisation sans ID d'animal"
+      );
       return;
     }
 
     Alert.alert(
-      "Remove Location",
-      "Are you sure you want to remove this location?",
+      "Supprimer la localisation",
+      "Êtes-vous sûr de vouloir supprimer cette localisation ?",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Annuler", style: "cancel" },
         {
-          text: "Remove",
+          text: "Supprimer",
           style: "destructive",
           onPress: async () => {
             try {
@@ -67,7 +187,7 @@ export default function LocationDisplay({
               onLocationRemoved?.();
             } catch (error) {
               console.error("Error removing location:", error);
-              Alert.alert("Error", "Failed to remove location");
+              Alert.alert("Erreur", "Impossible de supprimer la localisation");
             }
           },
         },
@@ -79,17 +199,13 @@ export default function LocationDisplay({
     if (location) {
       const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
       Linking.openURL(url);
-      Alert.alert(
-        "Open in Maps",
-        `Would you like to open this location in Google Maps?\n\nCoordinates: ${location.latitude}, ${location.longitude}`
-      );
     }
   };
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading location...</Text>
+        <Text style={styles.loadingText}>Chargement de la localisation...</Text>
       </View>
     );
   }
@@ -98,8 +214,26 @@ export default function LocationDisplay({
     return (
       <View style={styles.container}>
         <Text style={styles.noLocationText}>
-          No location saved for this pet
+          Aucune localisation enregistrée pour cet animal
         </Text>
+        {animalId && (
+          <TouchableOpacity
+            onPress={updateLocationWithCurrentPosition}
+            style={styles.updateButton}
+            disabled={updatingLocation}
+          >
+            <MaterialCommunityIcons
+              name="crosshairs-gps"
+              size={20}
+              color="white"
+            />
+            <Text style={styles.updateButtonText}>
+              {updatingLocation
+                ? "Mise à jour..."
+                : "Mettre à jour avec ma position"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -107,15 +241,30 @@ export default function LocationDisplay({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Saved Location</Text>
-        {animalId && (
-          <TouchableOpacity
-            onPress={removeLocation}
-            style={styles.removeButton}
-          >
-            <MaterialCommunityIcons name="delete" size={20} color="#e74c3c" />
-          </TouchableOpacity>
-        )}
+        <Text style={styles.title}>Localisation enregistrée</Text>
+        <View style={styles.headerButtons}>
+          {animalId && (
+            <TouchableOpacity
+              onPress={updateLocationWithCurrentPosition}
+              style={styles.updateButton}
+              disabled={updatingLocation}
+            >
+              <MaterialCommunityIcons
+                name="crosshairs-gps"
+                size={16}
+                color="white"
+              />
+            </TouchableOpacity>
+          )}
+          {animalId && (
+            <TouchableOpacity
+              onPress={removeLocation}
+              style={styles.removeButton}
+            >
+              <MaterialCommunityIcons name="delete" size={20} color="#e74c3c" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.locationInfo}>
@@ -141,13 +290,14 @@ export default function LocationDisplay({
         )}
 
         <Text style={styles.timestamp}>
-          Saved: {new Date(location.created_at).toLocaleDateString()}
+          Enregistrée le:{" "}
+          {new Date(location.created_at).toLocaleDateString("fr-FR")}
         </Text>
       </View>
 
       <TouchableOpacity onPress={openInMaps} style={styles.mapsButton}>
         <MaterialCommunityIcons name="map" size={20} color="white" />
-        <Text style={styles.mapsButtonText}>Open in Maps</Text>
+        <Text style={styles.mapsButtonText}>Ouvrir dans Maps</Text>
       </TouchableOpacity>
     </View>
   );
@@ -171,6 +321,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
+  headerButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  updateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#27ae60",
+    padding: 8,
+    borderRadius: 6,
+    gap: 4,
+  },
+  updateButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 14,
+  },
   removeButton: {
     padding: 4,
   },
@@ -183,6 +351,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#666",
     fontStyle: "italic",
+    marginBottom: 16,
   },
   locationInfo: {
     backgroundColor: "white",

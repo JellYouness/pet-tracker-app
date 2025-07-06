@@ -1,7 +1,13 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Stack } from "tamagui";
 import { theme } from "../../../../constants/theme";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -246,7 +252,16 @@ export default function MedicalInfoScreen() {
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Informations médicales</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          onPress={() => router.push(`/animal/${id}/medical-info/edit`)}
+          style={styles.editButton}
+        >
+          <MaterialCommunityIcons
+            name="pencil"
+            size={20}
+            color={theme.colors.primary.DEFAULT}
+          />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.animalName}>{animalName}</Text>
@@ -297,8 +312,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: theme.colors.text.DEFAULT,
   },
-  headerSpacer: {
-    width: 40,
+  editButton: {
+    padding: 8,
   },
   animalName: {
     fontSize: 16,
