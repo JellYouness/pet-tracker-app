@@ -12,7 +12,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    full_name: user?.full_name || "",
+    name: user?.name || "",
     cin: user?.cin || "",
     address: user?.address || "",
     mobile: user?.mobile || "",
@@ -28,7 +28,7 @@ export default function EditProfileScreen() {
       const { error } = await supabase
         .from("users")
         .update({
-          full_name: formData.full_name,
+          name: formData.name,
           cin: formData.cin,
           address: formData.address,
           mobile: formData.mobile,
@@ -53,7 +53,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView>
+    <ScrollView automaticallyAdjustKeyboardInsets>
       <Stack padding="$4" backgroundColor="$background">
         <Text
           style={{
@@ -69,10 +69,8 @@ export default function EditProfileScreen() {
         <Stack space="$4">
           <Input
             label="Nom complet"
-            value={formData.full_name}
-            onChangeText={(text) =>
-              setFormData({ ...formData, full_name: text })
-            }
+            value={formData.name}
+            onChangeText={(text) => setFormData({ ...formData, name: text })}
           />
 
           <Input

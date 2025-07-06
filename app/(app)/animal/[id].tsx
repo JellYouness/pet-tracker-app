@@ -1,31 +1,42 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Platform, Text, TouchableOpacity } from "react-native";
+import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView, Stack, XStack } from "tamagui";
 import { Button } from "../../../components/Button";
+import LocationDisplay from "../../../components/LocationDisplay";
+import LostAnimalBanner from "../../../components/LostAnimalBanner";
+import MarkAsLostModal from "../../../components/MarkAsLostModal";
 import { theme } from "../../../constants/theme";
 import { useAuth } from "../../../contexts/AuthContext";
+import {
+  ownershipTransferUtils,
+  type OwnershipTransferWithDetails,
+} from "../../../lib/ownershipTransfer";
 import type { Database } from "../../../lib/supabase";
 import { supabase } from "../../../lib/supabase";
 
 type Animal = Database["public"]["Tables"]["animals"]["Row"];
+type User = Database["public"]["Tables"]["users"]["Row"];
 
 export default function AnimalDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
   const [animal, setAnimal] = useState<Animal | null>(null);
+  const [owner, setOwner] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<Animal>>({});
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showMarkAsLostModal, setShowMarkAsLostModal] = useState(false);
+  const [pendingTransfer, setPendingTransfer] =
+    useState<OwnershipTransferWithDetails | null>(null);
 
   useEffect(() => {
     fetchAnimal();
+    fetchPendingTransfer();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchAnimal = async () => {
@@ -35,12 +46,38 @@ export default function AnimalDetailScreen() {
 
       const { data, error } = await supabase
         .from("animals")
-        .select("*")
+        .select(
+          `
+          *,
+          locations (
+            id,
+            latitude,
+            longitude,
+            address,
+            created_at,
+            updated_at
+          )
+        `
+        )
         .eq("id", id)
         .single();
 
       if (error) throw error;
       setAnimal(data);
+
+      // Fetch owner information
+      if (data.owner_id) {
+        const { data: ownerData, error: ownerError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", data.owner_id)
+          .single();
+
+        if (!ownerError && ownerData) {
+          setOwner(ownerData);
+        }
+      }
+
     } catch (err) {
       console.error("Error fetching animal:", err);
       setError(
@@ -48,6 +85,17 @@ export default function AnimalDetailScreen() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingTransfer = async () => {
+    try {
+      const transfer = await ownershipTransferUtils.getPendingTransferForAnimal(
+        id as string
+      );
+      setPendingTransfer(transfer);
+    } catch (err) {
+      console.error("Error fetching pending transfer:", err);
     }
   };
 
@@ -87,13 +135,6 @@ export default function AnimalDetailScreen() {
     );
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData({ ...formData, birthdate: selectedDate.toISOString() });
-    }
-  };
-
   if (loading) {
     return (
       <Stack flex={1} justifyContent="center" alignItems="center">
@@ -130,11 +171,22 @@ export default function AnimalDetailScreen() {
             style={{
               width: "70%",
               height: 250,
-              borderRadius: "100%",
+              borderRadius: 125,
               backgroundColor: theme.colors.background.dark,
               marginHorizontal: "auto",
             }}
           />
+
+          {/* Lost Animal Banner */}
+          {animal.is_lost && animal.lost_since && (
+            <LostAnimalBanner
+              animalId={animal.id}
+              lostSince={animal.lost_since}
+              lostNotes={animal.lost_notes}
+              isOwner={user?.id === animal.owner_id}
+              onStatusChange={fetchAnimal}
+            />
+          )}
 
           <Stack space="$4" padding="$2">
             <Stack space="$2">
@@ -172,54 +224,492 @@ export default function AnimalDetailScreen() {
               <Stack marginTop="$4">
                 <Text
                   style={{
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: "bold",
                     color: theme.colors.text.DEFAULT,
-                    marginBottom: 5,
+                    marginBottom: 16,
                   }}
                 >
-                  Race :
+                  🐾 Informations personnelles
                 </Text>
-                <Text style={{ color: theme.colors.text.light, fontSize: 16 }}>
-                  {animal.race}
-                </Text>
+
+                <Stack
+                  style={{
+                    borderRadius: 16,
+                    // padding: 20,
+                  }}
+                >
+                  <XStack space="$4" flexDirection="column">
+                    {/* Race */}
+                    <Stack
+                      style={{
+                        flex: 1,
+                        backgroundColor: "white",
+                        padding: 16,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: "#dee2e6",
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 4,
+                        elevation: 1,
+                      }}
+                    >
+                      <XStack alignItems="center" space="$2">
+                        <View
+                          style={{
+                            backgroundColor: "#007bff",
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text style={{ fontSize: 20 }}>🐕</Text>
+                        </View>
+                        <Stack flex={1} gap="$1">
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: "#6c757d",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Race
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "bold",
+                              color: theme.colors.text.DEFAULT,
+                            }}
+                          >
+                            {animal.race}
+                          </Text>
+                        </Stack>
+                      </XStack>
+                    </Stack>
+
+                    {/* Birth Date */}
+                    <Stack
+                      style={{
+                        flex: 1,
+                        minWidth: 150,
+                        backgroundColor: "white",
+                        padding: 16,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: "#dee2e6",
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 4,
+                        elevation: 1,
+                      }}
+                    >
+                      <XStack alignItems="center" space="$2">
+                        <View
+                          style={{
+                            backgroundColor: "#28a745",
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text style={{ fontSize: 20 }}>🎂</Text>
+                        </View>
+                        <Stack flex={1}>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: "#6c757d",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Date de naissance
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "bold",
+                              color: theme.colors.text.DEFAULT,
+                            }}
+                          >
+                            {animal?.birthdate
+                              ? format(
+                                  new Date(animal.birthdate),
+                                  "dd/MM/yyyy",
+                                  {
+                                    locale: fr,
+                                  }
+                                )
+                              : "Non spécifiée"}
+                          </Text>
+                        </Stack>
+                      </XStack>
+                    </Stack>
+
+                    {/* Birth Place */}
+                    {animal?.birthplace && (
+                      <Stack
+                        style={{
+                          flex: 1,
+                          minWidth: 150,
+                          backgroundColor: "white",
+                          padding: 16,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: "#dee2e6",
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 4,
+                          elevation: 1,
+                        }}
+                      >
+                        <XStack alignItems="center" space="$2">
+                          <View
+                            style={{
+                              backgroundColor: "#ffc107",
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Text style={{ fontSize: 20 }}>📍</Text>
+                          </View>
+                          <Stack flex={1}>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontWeight: "600",
+                                color: "#6c757d",
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Lieu de naissance
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: 16,
+                                fontWeight: "bold",
+                                color: theme.colors.text.DEFAULT,
+                              }}
+                            >
+                              {animal.birthplace}
+                            </Text>
+                          </Stack>
+                        </XStack>
+                      </Stack>
+                    )}
+                  </XStack>
+                </Stack>
               </Stack>
 
-              <Stack marginTop="$4">
-                <Text
+              {/* Owner Information */}
+              {owner && (
+                <Stack marginTop="$4">
+                  <XStack alignItems="center" space="$2" marginBottom="$2">
+                    <MaterialCommunityIcons
+                      name="account"
+                      size={20}
+                      color={theme.colors.primary.DEFAULT}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        color: theme.colors.text.DEFAULT,
+                      }}
+                    >
+                      Propriétaire
+                    </Text>
+                  </XStack>
+                  <Stack
+                    padding="$3"
+                    borderRadius="$3"
+                    style={{
+                      backgroundColor: "#f8f9fa",
+                      borderWidth: 1,
+                      borderColor: "#e9ecef",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "600",
+                        color: theme.colors.text.DEFAULT,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {owner.name || "Nom non spécifié"}
+                    </Text>
+                    <Text
+                      style={{
+                        color: theme.colors.text.light,
+                        fontSize: 14,
+                        marginBottom: 2,
+                      }}
+                    >
+                      📧 {owner.email || "Non spécifié"}
+                    </Text>
+                    <Text
+                      style={{
+                        color: theme.colors.text.light,
+                        fontSize: 14,
+                        marginBottom: 2,
+                      }}
+                    >
+                      📱 {owner.mobile || "Non spécifié"}
+                    </Text>
+                    <Text
+                      style={{
+                        color: theme.colors.text.light,
+                        fontSize: 14,
+                        marginBottom: 2,
+                      }}
+                    >
+                      📍 {owner.address || "Non spécifié"}
+                    </Text>
+
+                    <Text
+                      style={{ color: theme.colors.text.light, fontSize: 14 }}
+                    >
+                      🆔 CIN: {owner.cin || "Non spécifié"}
+                    </Text>
+                  </Stack>
+                </Stack>
+              )}
+
+              {/* Pending Transfer Information */}
+              {pendingTransfer && (
+                <Stack
+                  marginTop="$4"
+                  padding="$4"
+                  borderRadius="$4"
                   style={{
-                    fontSize: 18,
-                    fontWeight: "bold",
-                    color: theme.colors.text.DEFAULT,
-                    marginBottom: 5,
+                    borderWidth: 1,
+                    borderColor: "#f39c12",
+                    backgroundColor: "#fff3cd",
                   }}
                 >
-                  Date de naissance :
-                </Text>
-                <Text style={{ color: theme.colors.text.light, fontSize: 16 }}>
-                  {animal?.birthdate
-                    ? format(new Date(animal.birthdate), "dd/MM/yyyy", {
-                        locale: fr,
-                      })
-                    : "Non spécifiée"}
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      color: "#856404",
+                      marginBottom: 8,
+                    }}
+                  >
+                    ⚠️ Transfert de propriété en attente
+                  </Text>
+                  <Text
+                    style={{ color: "#856404", fontSize: 14, marginBottom: 4 }}
+                  >
+                    Demande envoyée à:{" "}
+                    {pendingTransfer.new_owner.name ||
+                      pendingTransfer.new_owner.email}
+                  </Text>
+                  <Text
+                    style={{ color: "#856404", fontSize: 14, marginBottom: 8 }}
+                  >
+                    Date:{" "}
+                    {new Date(pendingTransfer.requested_at).toLocaleDateString(
+                      "fr-FR"
+                    )}
+                  </Text>
+                  {(user?.id === pendingTransfer.current_owner_id ||
+                    user?.id === pendingTransfer.new_owner_id) && (
+                    <Button
+                      variant="outline"
+                      onPress={() => router.push("/ownership-transfers")}
+                      style={{ alignSelf: "flex-start" }}
+                    >
+                      <Text>Voir les détails</Text>
+                    </Button>
+                  )}
+                </Stack>
+              )}
+
+              {/* Location Display */}
+              <Stack marginTop="$4">
+                <XStack alignItems="center" space="$2" marginBottom="$2">
+                  <MaterialCommunityIcons
+                    name="map-marker"
+                    size={20}
+                    color={theme.colors.primary.DEFAULT}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: theme.colors.text.DEFAULT,
+                    }}
+                  >
+                    Localisation
+                  </Text>
+                </XStack>
+                <LocationDisplay
+                  location={animal.locations}
+                  onLocationRemoved={() => {
+                    // Refresh the animal data when location is removed
+                    fetchAnimal();
+                  }}
+                />
               </Stack>
 
-              <Stack marginTop="$4">
+              {/* <Stack marginTop="$4">
                 <Text
                   style={{
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: "bold",
                     color: theme.colors.text.DEFAULT,
-                    marginBottom: 5,
+                    marginBottom: 16,
                   }}
                 >
-                  Place de naissance :
-                </Text>
-                <Text style={{ color: theme.colors.text.light, fontSize: 16 }}>
-                  {animal?.birthplace}
-                </Text>
-              </Stack>
+                  💉 Vaccinations
+                </Text> */}
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "white",
+                  padding: 20,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#e9ecef",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}
+                onPress={() => router.push(`/animal/${id}/vaccinations`)}
+              >
+                <XStack alignItems="center" justifyContent="space-between">
+                  <XStack alignItems="center" space="$3" flex={1}>
+                    <View
+                      style={{
+                        backgroundColor: "#d4edda",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 24 }}>💉</Text>
+                    </View>
+                    <Stack flex={1}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          color: theme.colors.text.DEFAULT,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Gérer Les Vaccinations
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme.colors.text.light,
+                          fontSize: 14,
+                        }}
+                      >
+                        Voir et ajouter les vaccinations de {animal.name}
+                      </Text>
+                    </Stack>
+                  </XStack>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color="#ccc"
+                  />
+                </XStack>
+              </TouchableOpacity>
+              {/* </Stack> */}
+
+              {/* <Stack marginTop="$4">
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    color: theme.colors.text.DEFAULT,
+                    marginBottom: 16,
+                  }}
+                >
+                  🏥 Informations médicales
+                </Text> */}
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "white",
+                  padding: 20,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#e9ecef",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}
+                onPress={() => router.push(`/animal/${id}/medical-info`)}
+              >
+                <XStack alignItems="center" justifyContent="space-between">
+                  <XStack alignItems="center" space="$3" flex={1}>
+                    <View
+                      style={{
+                        backgroundColor: "#e3f2fd",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 24 }}>🏥</Text>
+                    </View>
+                    <Stack flex={1}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          color: theme.colors.text.DEFAULT,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Informations Médicales Complètes
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme.colors.text.light,
+                          fontSize: 14,
+                        }}
+                      >
+                        Allergies, médicaments, conditions chroniques et plus
+                      </Text>
+                    </Stack>
+                  </XStack>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color="#ccc"
+                  />
+                </XStack>
+              </TouchableOpacity>
+              {/* </Stack> */}
             </Stack>
 
             {error && (
@@ -251,6 +741,32 @@ export default function AnimalDetailScreen() {
                     </Button>
                   </Stack>
 
+                  {!animal.is_lost && (
+                    <Stack flex={1} marginTop="$4">
+                      <Button
+                        variant="outline"
+                        onPress={() => setShowMarkAsLostModal(true)}
+                        style={{
+                          backgroundColor: "#ff6b6b",
+                          borderColor: "#ff6b6b",
+                        }}
+                      >
+                        <Text style={{ color: "white", fontWeight: "bold" }}>
+                          Marquer comme perdu
+                        </Text>
+                      </Button>
+                    </Stack>
+                  )}
+
+                  <Stack flex={1} marginTop="$4">
+                    <Button
+                      variant="outline"
+                      onPress={() => router.push(`/animal/change-owner/${id}`)}
+                    >
+                      Changer de propriétaire
+                    </Button>
+                  </Stack>
+
                   <Stack flex={1} marginTop="$4">
                     <Button variant="outline" onPress={handleDelete}>
                       Supprimer
@@ -268,6 +784,15 @@ export default function AnimalDetailScreen() {
           </Stack>
         </Stack>
       </Stack>
+
+      {/* Mark as Lost Modal */}
+      <MarkAsLostModal
+        visible={showMarkAsLostModal}
+        onClose={() => setShowMarkAsLostModal(false)}
+        animalId={animal.id}
+        animalName={animal.name}
+        onStatusChange={fetchAnimal}
+      />
     </ScrollView>
   );
 }

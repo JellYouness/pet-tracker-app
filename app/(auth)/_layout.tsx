@@ -26,6 +26,12 @@ export default function AuthLayout() {
           title: "Inscription",
         }}
       />
+      <Stack.Screen
+        name="user-details"
+        options={{
+          title: "Détails de l'utilisateur",
+        }}
+      />
     </Stack>
   );
 }

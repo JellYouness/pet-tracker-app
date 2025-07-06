@@ -1,5 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { decode } from "base64-arraybuffer";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -16,9 +19,6 @@ import { Input } from "../../../components/Input";
 import { theme } from "../../../constants/theme";
 import { useAuth } from "../../../contexts/AuthContext";
 import { supabase } from "../../../lib/supabase";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
@@ -31,10 +31,13 @@ export default function RegisterAnimalScreen() {
     image: "",
     nfc: "",
   });
+  const [vaccinations, setVaccinations] = useState([
+    { name: "", date: "", notes: "" },
+  ]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleImageUpload = async () => {
     try {
@@ -118,13 +121,14 @@ export default function RegisterAnimalScreen() {
           race: formData.race,
           gender: formData.gender,
           birthdate: formData.birthdate,
-          owner_id: process.env.EXPO_PUBLIC_DISABLE_AUTH
+          owner_id: !process.env.EXPO_PUBLIC_DISABLE_AUTH
             ? "722fa0c8-7f1f-44a1-8fa4-f3e48c5500f0"
             : user?.id,
           image:
             formData.image ||
             "https://api.dicebear.com/7.x/shapes/svg?seed=" + formData.name,
           nfc_id: formData.nfc,
+          vaccinations: vaccinations.filter((v) => v.name && v.date),
         })
         .select();
 
@@ -147,21 +151,21 @@ export default function RegisterAnimalScreen() {
 
   const handleNfcScan = () => {
     // const tag = await startScanning();
-    const tag = { id: "1234567890" };
+    const tag = { id: "1234567854540" };
     if (tag) {
       setFormData({ ...formData, nfc: tag.id });
     }
   };
 
-    const handleDateChange = (event: any, selectedDate?: Date) => {
-      setShowDatePicker(false);
-      if (selectedDate) {
-        setFormData({ ...formData, birthdate: selectedDate.toISOString() });
-      }
-    };
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, birthdate: selectedDate.toISOString() });
+    }
+  };
 
   return (
-    <ScrollView>
+    <ScrollView automaticallyAdjustKeyboardInsets>
       <Stack padding="$4" backgroundColor="$background">
         <Text
           style={{
@@ -313,6 +317,102 @@ export default function RegisterAnimalScreen() {
               </Text>
             </Stack>
           </Button>
+
+          {/* Vaccinations Section */}
+          <Stack>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 16,
+                marginBottom: 8,
+                color: theme.colors.text.DEFAULT,
+              }}
+            >
+              Vaccinations
+            </Text>
+            {vaccinations.map((v, idx) => (
+              <XStack key={idx} space="$2" alignItems="center" marginBottom={8}>
+                <Input
+                  label="Nom"
+                  value={v.name}
+                  placeholder="Nom du vaccin"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].name = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    setVaccinations((vaccinations) =>
+                      vaccinations.filter((_, i) => i !== idx)
+                    );
+                  }}
+                  style={{ marginLeft: 4 }}
+                  disabled={vaccinations.length === 1}
+                >
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={24}
+                    color={theme.colors.error}
+                  />
+                </TouchableOpacity>
+              </XStack>
+            ))}
+            {vaccinations.map((v, idx) => (
+              <XStack
+                key={"date-" + idx}
+                space="$2"
+                alignItems="center"
+                marginBottom={8}
+              >
+                <Input
+                  label="Date"
+                  value={v.date}
+                  placeholder="YYYY-MM-DD"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].date = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <Input
+                  label="Notes"
+                  value={v.notes}
+                  placeholder="Notes (optionnel)"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].notes = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+              </XStack>
+            ))}
+            <Button
+              variant="outline"
+              onPress={() =>
+                setVaccinations([
+                  ...vaccinations,
+                  { name: "", date: "", notes: "" },
+                ])
+              }
+              style={{ marginTop: 8 }}
+            >
+              <XStack alignItems="center" space="$2">
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={18}
+                  color={theme.colors.primary.DEFAULT}
+                />
+                <Text style={{ color: theme.colors.primary.DEFAULT }}>
+                  Ajouter un vaccin
+                </Text>
+              </XStack>
+            </Button>
+          </Stack>
 
           {error && (
             <Text

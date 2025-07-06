@@ -16,12 +16,10 @@ import {
 import { Stack, XStack } from "tamagui";
 import { Button } from "../../../../components/Button";
 import { Input } from "../../../../components/Input";
+import LocationTracker from "../../../../components/LocationTracker";
 import { theme } from "../../../../constants/theme";
 import { useAuth } from "../../../../contexts/AuthContext";
-import type { Database } from "../../../../lib/supabase";
 import { supabase } from "../../../../lib/supabase";
-
-type Animal = Database["public"]["Tables"]["animals"]["Row"];
 
 export default function EditAnimalScreen() {
   const router = useRouter();
@@ -34,6 +32,9 @@ export default function EditAnimalScreen() {
     birthdate: "",
     image: "",
   });
+  const [vaccinations, setVaccinations] = useState([
+    { name: "", date: "", notes: "" },
+  ]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -42,6 +43,7 @@ export default function EditAnimalScreen() {
 
   useEffect(() => {
     fetchAnimal();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchAnimal = async () => {
@@ -51,7 +53,19 @@ export default function EditAnimalScreen() {
 
       const { data, error } = await supabase
         .from("animals")
-        .select("*")
+        .select(
+          `
+          *,
+          locations (
+            id,
+            latitude,
+            longitude,
+            address,
+            created_at,
+            updated_at
+          )
+        `
+        )
         .eq("id", id)
         .single();
 
@@ -68,6 +82,11 @@ export default function EditAnimalScreen() {
         birthdate: data.birthdate,
         image: data.image,
       });
+      setVaccinations(
+        Array.isArray(data.vaccinations) && data.vaccinations.length > 0
+          ? data.vaccinations
+          : [{ name: "", date: "", notes: "" }]
+      );
     } catch (err) {
       console.error("Error fetching animal:", err);
       setError(
@@ -154,6 +173,7 @@ export default function EditAnimalScreen() {
           gender: formData.gender,
           birthdate: formData.birthdate,
           image: formData.image,
+          vaccinations: vaccinations.filter((v) => v.name && v.date),
         })
         .eq("id", id);
 
@@ -186,7 +206,7 @@ export default function EditAnimalScreen() {
   }
 
   return (
-    <ScrollView>
+    <ScrollView automaticallyAdjustKeyboardInsets>
       <Stack padding="$4" backgroundColor="$background">
         <Text
           style={{
@@ -313,6 +333,113 @@ export default function EditAnimalScreen() {
                 maximumDate={new Date()}
               />
             )}
+          </Stack>
+
+          {/* Location Tracker */}
+          <LocationTracker
+            animalId={id as string}
+            onLocationSaved={(location) => {
+              console.log("Location saved:", location);
+            }}
+            onError={(error) => {
+              setError(error);
+            }}
+          />
+
+          {/* Vaccinations Section */}
+          <Stack>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 16,
+                marginBottom: 8,
+                color: theme.colors.text.DEFAULT,
+              }}
+            >
+              Vaccinations
+            </Text>
+            {vaccinations.map((v, idx) => (
+              <XStack key={idx} space="$2" alignItems="center" marginBottom={8}>
+                <Input
+                  label="Nom"
+                  value={v.name}
+                  placeholder="Nom du vaccin"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].name = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    setVaccinations((vaccinations) =>
+                      vaccinations.filter((_, i) => i !== idx)
+                    );
+                  }}
+                  style={{ marginLeft: 4 }}
+                  disabled={vaccinations.length === 1}
+                >
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={24}
+                    color={theme.colors.error}
+                  />
+                </TouchableOpacity>
+              </XStack>
+            ))}
+            {vaccinations.map((v, idx) => (
+              <XStack
+                key={"date-" + idx}
+                space="$2"
+                alignItems="center"
+                marginBottom={8}
+              >
+                <Input
+                  label="Date"
+                  value={v.date}
+                  placeholder="YYYY-MM-DD"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].date = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <Input
+                  label="Notes"
+                  value={v.notes}
+                  placeholder="Notes (optionnel)"
+                  onChangeText={(text) => {
+                    const updated = [...vaccinations];
+                    updated[idx].notes = text;
+                    setVaccinations(updated);
+                  }}
+                  style={{ flex: 1 }}
+                />
+              </XStack>
+            ))}
+            <Button
+              variant="outline"
+              onPress={() =>
+                setVaccinations([
+                  ...vaccinations,
+                  { name: "", date: "", notes: "" },
+                ])
+              }
+              style={{ marginTop: 8 }}
+            >
+              <XStack alignItems="center" space="$2">
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={18}
+                  color={theme.colors.primary.DEFAULT}
+                />
+                <Text style={{ color: theme.colors.primary.DEFAULT }}>
+                  Ajouter un vaccin
+                </Text>
+              </XStack>
+            </Button>
           </Stack>
 
           {error && (

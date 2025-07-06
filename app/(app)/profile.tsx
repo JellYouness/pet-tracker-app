@@ -61,7 +61,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView>
+    <ScrollView automaticallyAdjustKeyboardInsets>
       <Stack padding="$4" backgroundColor="$background">
         <Text
           style={{

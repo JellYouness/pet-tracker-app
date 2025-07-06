@@ -5,6 +5,7 @@ import { theme } from "../constants/theme";
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
+  name?: string;
   fullWidth?: boolean;
   className?: string;
   withBorder?: boolean;
@@ -13,6 +14,7 @@ interface InputProps extends TextInputProps {
 export const Input = ({
   label,
   error,
+  name,
   fullWidth = false,
   className = "",
   withBorder = false,

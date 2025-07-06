@@ -1,12 +1,20 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, Text } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Stack, XStack } from "tamagui";
 import { Button } from "../../../../components/Button";
-import { Input } from "../../../../components/Input";
+import OcrComponent from "../../../../components/OcrComponent";
 import { theme } from "../../../../constants/theme";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { ownershipTransferUtils } from "../../../../lib/ownershipTransfer";
 import type { Database } from "../../../../lib/supabase";
 import { supabase } from "../../../../lib/supabase";
 
@@ -21,11 +29,18 @@ export default function ChangeOwnerScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newOwnerEmail, setNewOwnerEmail] = useState("");
+  const [newOwnerCin, setNewOwnerCin] = useState("");
   const [newOwner, setNewOwner] = useState<User | null>(null);
+  const [showOcr, setShowOcr] = useState(false);
+  const [ocrData, setOcrData] = useState<{
+    lastname: string;
+    firstname: string;
+    cin: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchAnimal();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchAnimal = async () => {
@@ -56,23 +71,37 @@ export default function ChangeOwnerScreen() {
     }
   };
 
-  const searchNewOwner = async () => {
+  const handleOcrSuccess = (data: {
+    lastname: string;
+    firstname: string;
+    cin: string;
+  }) => {
+    setOcrData(data);
+    setNewOwnerCin(data.cin);
+    setShowOcr(false);
+    // Automatically search for the user after OCR
+    searchNewOwnerByCin(data.cin);
+  };
+
+  const searchNewOwnerByCin = async (cin?: string) => {
     try {
       setError(null);
-      if (!newOwnerEmail) {
-        setError("Veuillez entrer une adresse email");
+      const searchCin = cin || newOwnerCin;
+
+      if (!searchCin) {
+        setError("Veuillez entrer un numéro CIN");
         return;
       }
 
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("email", newOwnerEmail)
+        .eq("cin", searchCin)
         .single();
 
       if (error) {
         if (error.code === "PGRST116") {
-          setError("Aucun utilisateur trouvé avec cette adresse email");
+          setError("Aucun utilisateur trouvé avec ce numéro CIN");
         } else {
           throw error;
         }
@@ -95,31 +124,44 @@ export default function ChangeOwnerScreen() {
     }
 
     Alert.alert(
-      "Confirmer le changement de propriétaire",
-      `Êtes-vous sûr de vouloir transférer ${animal?.name} à ${newOwner.email} ?`,
+      "Demander le transfert de propriété",
+      `Êtes-vous sûr de vouloir demander le transfert de ${animal?.name} à ${
+        newOwner.name || newOwner.email
+      } ?\n\nL'utilisateur devra confirmer l'acceptation de l'animal.`,
       [
         {
           text: "Annuler",
           style: "cancel",
         },
         {
-          text: "Confirmer",
-          style: "destructive",
+          text: "Demander le transfert",
+          style: "default",
           onPress: async () => {
             try {
               setSaving(true);
               setError(null);
 
-              const { error } = await supabase
-                .from("animals")
-                .update({ owner_id: newOwner.id })
-                .eq("id", id);
+              await ownershipTransferUtils.createTransferRequest(
+                id as string,
+                user!.id,
+                newOwner.id,
+                `Transfert demandé par ${user?.email}`
+              );
 
-              if (error) throw error;
-
-              router.replace(`/animal/${id}`);
+              Alert.alert(
+                "Demande envoyée",
+                `La demande de transfert a été envoyée à ${
+                  newOwner.name || newOwner.email
+                }. L'animal restera en votre possession jusqu'à confirmation.`,
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.replace(`/animal/${id}`),
+                  },
+                ]
+              );
             } catch (err) {
-              console.error("Error changing owner:", err);
+              console.error("Error creating transfer request:", err);
               setError(
                 err instanceof Error
                   ? err.message
@@ -142,8 +184,12 @@ export default function ChangeOwnerScreen() {
     );
   }
 
+  if (showOcr) {
+    return <OcrComponent onSuccess={handleOcrSuccess} />;
+  }
+
   return (
-    <ScrollView>
+    <ScrollView automaticallyAdjustKeyboardInsets>
       <Stack padding="$4" backgroundColor="$background">
         <Text
           style={{
@@ -166,40 +212,78 @@ export default function ChangeOwnerScreen() {
                 marginBottom: 8,
               }}
             >
-              Rechercher un utilisateur
+              Rechercher un utilisateur par CIN
             </Text>
-            <XStack space="$2">
+
+            {/* OCR Button */}
+            <TouchableOpacity
+              style={styles.ocrButton}
+              onPress={() => setShowOcr(true)}
+            >
+              <View style={styles.ocrButtonContent}>
+                <MaterialCommunityIcons
+                  name="camera"
+                  size={24}
+                  color={theme.colors.primary.DEFAULT}
+                />
+                <Text style={styles.ocrButtonText}>
+                  Scanner le CIN avec la caméra
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            {/* <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View> */}
+
+            {/* Manual CIN Input */}
+            {/* <XStack space="$2">
               <Stack flex={1}>
                 <Input
-                  placeholder="Email de l'utilisateur"
-                  value={newOwnerEmail}
-                  onChangeText={setNewOwnerEmail}
-                  keyboardType="email-address"
+                  placeholder="Numéro CIN de l'utilisateur"
+                  value={newOwnerCin}
+                  onChangeText={setNewOwnerCin}
+                  keyboardType="numeric"
                   autoCapitalize="none"
                 />
               </Stack>
               <Button onPress={searchNewOwner}>Rechercher</Button>
-            </XStack>
+            </XStack> */}
           </Stack>
 
-          {newOwner && (
+          {/* OCR Data Display */}
+          {ocrData && (
             <Stack
-              backgroundColor={theme.colors.background.dark}
               padding="$4"
               borderRadius="$4"
               space="$2"
+              style={{
+                borderWidth: 1,
+                borderColor: theme.colors.primary.DEFAULT,
+                backgroundColor: "#e8f4fd",
+              }}
             >
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: "bold",
-                  color: theme.colors.text.DEFAULT,
+                  color: theme.colors.primary.DEFAULT,
+                  marginBottom: 4,
                 }}
               >
-                Nouveau propriétaire
+                Données scannées:
               </Text>
-              <Text style={{ color: theme.colors.text.light }}>
-                {newOwner.email}
+              <Text style={{ color: theme.colors.text.DEFAULT }}>
+                {ocrData.firstname} {ocrData.lastname}
+              </Text>
+              <Text style={{ color: theme.colors.text.DEFAULT }}>
+                CIN: {ocrData.cin}
+              </Text>
+              <Text style={{ color: theme.colors.text.DEFAULT }}>
+                Email: {newOwner?.email}
               </Text>
             </Stack>
           )}
@@ -216,10 +300,6 @@ export default function ChangeOwnerScreen() {
           )}
 
           <XStack space="$4" flexDirection="column" marginTop="$4">
-            <Button variant="outline" onPress={() => router.back()}>
-              Annuler
-            </Button>
-
             {newOwner && (
               <Button onPress={handleChangeOwner} loading={saving}>
                 <XStack space="$2" alignItems="center">
@@ -229,14 +309,60 @@ export default function ChangeOwnerScreen() {
                     color="white"
                   />
                   <Text style={{ color: "white" }}>
-                    Transférer à {newOwner.email}
+                    Demander le transfert à {newOwner.name || newOwner.email}
                   </Text>
                 </XStack>
               </Button>
             )}
+
+            <Button variant="outline" onPress={() => router.back()}>
+              Annuler
+            </Button>
           </XStack>
         </Stack>
       </Stack>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  ocrButton: {
+    backgroundColor: "#eaf6fb",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.primary.DEFAULT,
+    shadowColor: "#3498db",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  ocrButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ocrButtonText: {
+    fontSize: 16,
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: "600",
+    marginLeft: 12,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#ddd",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: "#666",
+    fontSize: 14,
+  },
+});

@@ -1,0 +1,70 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="240" fill="#3498db"/>
+  
+  <!-- Inner Background -->
+  <rect x="80" y="80" width="864" height="864" rx="180" fill="#ffffff"/>
+  
+  <!-- Paw Print -->
+  <g transform="translate(512, 512)">
+    <!-- Main Paw Pad -->
+    <ellipse cx="0" cy="0" rx="120" ry="90" fill="#e74c3c"/>
+    
+    <!-- Top Left Toe -->
+    <ellipse cx="-90" cy="-120" rx="35" ry="45" fill="#e74c3c"/>
+    
+    <!-- Top Right Toe -->
+    <ellipse cx="90" cy="-120" rx="35" ry="45" fill="#e74c3c"/>
+    
+    <!-- Middle Left Toe -->
+    <ellipse cx="-60" cy="-150" rx="30" ry="40" fill="#e74c3c"/>
+    
+    <!-- Middle Right Toe -->
+    <ellipse cx="60" cy="-150" rx="30" ry="40" fill="#e74c3c"/>
+    
+    <!-- Bottom Left Toe -->
+    <ellipse cx="-100" cy="-60" rx="32" ry="42" fill="#e74c3c"/>
+    
+    <!-- Bottom Right Toe -->
+    <ellipse cx="100" cy="-60" rx="32" ry="42" fill="#e74c3c"/>
+  </g>
+  
+  <!-- Location Pin -->
+  <g transform="translate(512, 512)">
+    <!-- Pin Shadow -->
+    <ellipse cx="0" cy="180" rx="35" ry="12" fill="#000000" opacity="0.1"/>
+    
+    <!-- Pin Body -->
+    <path d="M0 -300 L-40 0 L0 120 L40 0 Z" fill="#f39c12"/>
+    
+    <!-- Pin Inner -->
+    <path d="M0 -270 L-30 0 L0 90 L30 0 Z" fill="#e67e22"/>
+    
+    <!-- Pin Dot -->
+    <circle cx="0" cy="-240" r="25" fill="#ffffff"/>
+    <circle cx="0" cy="-240" r="12" fill="#e74c3c"/>
+  </g>
+  
+  <!-- GPS Signal Waves -->
+  <g stroke="#3498db" stroke-width="15" stroke-linecap="round" opacity="0.4">
+    <!-- Top Signal -->
+    <path d="M512 120 Q512 180 512 240" />
+    <path d="M512 120 Q462 180 462 240" />
+    <path d="M512 120 Q562 180 562 240" />
+    
+    <!-- Bottom Signal -->
+    <path d="M512 784 Q512 844 512 904" />
+    <path d="M512 784 Q462 844 462 904" />
+    <path d="M512 784 Q562 844 562 904" />
+    
+    <!-- Left Signal -->
+    <path d="M120 512 Q180 512 240 512" />
+    <path d="M120 512 Q180 462 240 462" />
+    <path d="M120 512 Q180 562 240 562" />
+    
+    <!-- Right Signal -->
+    <path d="M784 512 Q844 512 904 512" />
+    <path d="M784 512 Q844 462 904 462" />
+    <path d="M784 512 Q844 562 904 562" />
+  </g>
+</svg> 

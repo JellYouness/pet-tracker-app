@@ -6,12 +6,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "pet-tracker-app",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   splash: {
-    image: "./assets/images/splash.png",
+    image: "./assets/splash.png",
     resizeMode: "contain",
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#ffffff",
   },
   assetBundlePatterns: ["**/*"],
   ios: {
@@ -24,12 +24,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "Cette application utilise la caméra pour scanner les cartes d'identité.",
       NSPhotoLibraryUsageDescription:
         "Cette application utilise la galerie pour accéder aux photos des animaux.",
+      NSLocationWhenInUseUsageDescription:
+        "This app needs location access to track your pets' locations.",
+      NSLocationAlwaysAndWhenInUseUsageDescription:
+        "This app needs background location access to automatically track your pets' locations even when the app is not active.",
+      NSLocationAlwaysUsageDescription:
+        "This app needs background location access to automatically track your pets' locations.",
+      UIBackgroundModes: ["location", "background-processing"],
     },
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#4F46E5",
+      foregroundImage: "./assets/adaptive-icon.png",
+      backgroundColor: "#ffffff",
     },
     package: "com.yourcompany.pettracker",
     permissions: [
@@ -37,21 +44,49 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "CAMERA",
       "READ_EXTERNAL_STORAGE",
       "WRITE_EXTERNAL_STORAGE",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "ACCESS_BACKGROUND_LOCATION",
+      "FOREGROUND_SERVICE",
+      "WAKE_LOCK",
     ],
   },
   web: {
-    favicon: "./assets/images/favicon.png",
+    favicon: "./assets/favicon.png",
   },
   plugins: [
-    "expo-router",
-    "expo-camera",
-    "expo-image-picker",
-    "expo-localization",
+    "react-native-nfc-manager",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "15.1",
+        },
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationAlwaysAndWhenInUsePermission:
+          "Allow Pet Tracker to use your location to track your pets.",
+        locationAlwaysPermission:
+          "Allow Pet Tracker to use your location in the background to automatically track your pets.",
+        locationWhenInUsePermission:
+          "Allow Pet Tracker to use your location to track your pets.",
+        isIosBackgroundLocationEnabled: true,
+        isAndroidBackgroundLocationEnabled: true,
+      },
+    ],
   ],
   scheme: "pettracker",
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     disableAuth: process.env.EXPO_PUBLIC_DISABLE_AUTH === "true",
+    ocrUrl: process.env.EXPO_PUBLIC_OCR_URL,
+    eas: {
+      projectId: "pet-tracker-app",
+    },
   },
+  owner: "jellyouness",
 });

@@ -1,0 +1,70 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="200" fill="#3498db"/>
+  
+  <!-- Inner Background -->
+  <rect x="50" y="50" width="924" height="924" rx="150" fill="#ffffff"/>
+  
+  <!-- Paw Print -->
+  <g transform="translate(512, 512)">
+    <!-- Main Paw Pad -->
+    <ellipse cx="0" cy="0" rx="100" ry="75" fill="#e74c3c"/>
+    
+    <!-- Top Left Toe -->
+    <ellipse cx="-75" cy="-100" rx="30" ry="40" fill="#e74c3c"/>
+    
+    <!-- Top Right Toe -->
+    <ellipse cx="75" cy="-100" rx="30" ry="40" fill="#e74c3c"/>
+    
+    <!-- Middle Left Toe -->
+    <ellipse cx="-50" cy="-125" rx="25" ry="35" fill="#e74c3c"/>
+    
+    <!-- Middle Right Toe -->
+    <ellipse cx="50" cy="-125" rx="25" ry="35" fill="#e74c3c"/>
+    
+    <!-- Bottom Left Toe -->
+    <ellipse cx="-85" cy="-50" rx="28" ry="38" fill="#e74c3c"/>
+    
+    <!-- Bottom Right Toe -->
+    <ellipse cx="85" cy="-50" rx="28" ry="38" fill="#e74c3c"/>
+  </g>
+  
+  <!-- Location Pin -->
+  <g transform="translate(512, 512)">
+    <!-- Pin Shadow -->
+    <ellipse cx="0" cy="150" rx="30" ry="10" fill="#000000" opacity="0.1"/>
+    
+    <!-- Pin Body -->
+    <path d="M0 -250 L-35 0 L0 100 L35 0 Z" fill="#f39c12"/>
+    
+    <!-- Pin Inner -->
+    <path d="M0 -225 L-25 0 L0 75 L25 0 Z" fill="#e67e22"/>
+    
+    <!-- Pin Dot -->
+    <circle cx="0" cy="-200" r="20" fill="#ffffff"/>
+    <circle cx="0" cy="-200" r="10" fill="#e74c3c"/>
+  </g>
+  
+  <!-- Tracking Signal Lines -->
+  <g stroke="#3498db" stroke-width="12" stroke-linecap="round" opacity="0.6">
+    <!-- Top Signal -->
+    <line x1="512" y1="150" x2="512" y2="250" />
+    <line x1="512" y1="150" x2="462" y2="200" />
+    <line x1="512" y1="150" x2="562" y2="200" />
+    
+    <!-- Bottom Signal -->
+    <line x1="512" y1="774" x2="512" y2="874" />
+    <line x1="512" y1="774" x2="462" y2="824" />
+    <line x1="512" y1="774" x2="562" y2="824" />
+    
+    <!-- Left Signal -->
+    <line x1="150" y1="512" x2="250" y2="512" />
+    <line x1="150" y1="512" x2="200" y2="462" />
+    <line x1="150" y1="512" x2="200" y2="562" />
+    
+    <!-- Right Signal -->
+    <line x1="774" y1="512" x2="874" y2="512" />
+    <line x1="774" y1="512" x2="824" y2="462" />
+    <line x1="774" y1="512" x2="824" y2="562" />
+  </g>
+</svg> 

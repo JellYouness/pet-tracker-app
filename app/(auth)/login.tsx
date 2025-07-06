@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, Text } from "react-native";
+import { Text } from "react-native";
 import { Stack, XStack } from "tamagui";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
@@ -11,8 +11,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: "oussama@test.com",
+    password: "test",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function LoginScreen() {
           style={{ width: 120, height: 120, marginBottom: 32 }}
         /> */}
 
-        <Text
+        {/* <Text
           style={{
             fontSize: 24,
             fontWeight: "bold",
@@ -52,7 +52,7 @@ export default function LoginScreen() {
           }}
         >
           Connexion
-        </Text>
+        </Text> */}
 
         <Stack width="100%" space="$4">
           <Input
@@ -61,6 +61,7 @@ export default function LoginScreen() {
             onChangeText={(text) => setFormData({ ...formData, email: text })}
             keyboardType="email-address"
             autoCapitalize="none"
+            inputMode="email"
           />
 
           <Input
