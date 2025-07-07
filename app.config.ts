@@ -85,7 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     disableAuth: process.env.EXPO_PUBLIC_DISABLE_AUTH === "true",
     ocrUrl: process.env.EXPO_PUBLIC_OCR_URL,
     eas: {
-      projectId: "pet-tracker-app",
+      projectId: "34e98b78-4e6e-4c29-84de-813197523f2f",
     },
   },
   owner: "jellyouness",

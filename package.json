@@ -64,6 +64,7 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "tamagui": "^1.126.14",
+    "testflight-dev-deploy": "^0.0.8",
     "zod": "^3.22.4"
   },
   "devDependencies": {
