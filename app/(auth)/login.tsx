@@ -12,7 +12,7 @@ export default function LoginScreen() {
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: "oussama@test.com",
-    password: "test",
+    password: "azerty",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

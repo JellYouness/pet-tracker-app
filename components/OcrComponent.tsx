@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { styled } from "tamagui";
 
-const BACKEND_URL = Constants.expoConfig?.extra?.ocrUrl + "/mrz-scan"; // Change this if needed
+const BACKEND_URL = "http://172.20.10.2:5001" + "/mrz-scan"; // Change this if needed
 // const BACKEND_URL = "http:/172.20.10.2:5001/mrz-scan"; // Change this if needed
 
 const Container = styled(View, {

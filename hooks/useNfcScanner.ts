@@ -44,18 +44,53 @@ const decodeNdefTextPayload = (payload: number[]): string => {
 const extractTextFromNdefMessage = (ndefMessage: any[]): string => {
   if (!ndefMessage || ndefMessage.length === 0) return "";
 
-  for (const record of ndefMessage) {
+  console.log("Processing NDEF message with", ndefMessage.length, "records");
+
+  for (let i = 0; i < ndefMessage.length; i++) {
+    const record = ndefMessage[i];
+    console.log(`Record ${i}:`, record);
+
     if (record.type && record.payload) {
       // Check if it's a text record (type 'T')
       const typeString = new TextDecoder("utf-8").decode(
         new Uint8Array(record.type)
       );
+      console.log(`Record ${i} type:`, typeString);
+
       if (typeString === "T") {
-        return decodeNdefTextPayload(record.payload);
+        console.log(`Record ${i} is a text record, payload:`, record.payload);
+        const text = decodeNdefTextPayload(record.payload);
+        console.log(`Extracted text from record ${i}:`, text);
+        return text;
+      } else if (typeString === "U") {
+        // URL record
+        console.log(`Record ${i} is a URL record, payload:`, record.payload);
+        try {
+          const url = new TextDecoder("utf-8").decode(
+            new Uint8Array(record.payload)
+          );
+          console.log(`Extracted URL from record ${i}:`, url);
+          return url;
+        } catch (error) {
+          console.log(`Error decoding URL from record ${i}:`, error);
+        }
+      } else {
+        // Try to decode as text anyway (some tags might not have proper type)
+        console.log(`Record ${i} has unknown type, trying to decode as text`);
+        try {
+          const text = decodeNdefTextPayload(record.payload);
+          if (text && text.trim()) {
+            console.log(`Successfully decoded text from record ${i}:`, text);
+            return text;
+          }
+        } catch (error) {
+          console.log(`Error decoding record ${i} as text:`, error);
+        }
       }
     }
   }
 
+  console.log("No text found in NDEF message");
   return "";
 };
 
@@ -155,18 +190,41 @@ export function useNfcScanner() {
 
       console.log("Starting real NFC scan...");
 
-      // Request NFC technology
-      await NfcManager.requestTechnology(NfcTech.Ndef);
+      // Try different NFC technologies
+      const technologies = [
+        NfcTech.Ndef,
+        NfcTech.NdefFormatable,
+        NfcTech.IsoDep,
+      ];
 
-      // Get the tag
-      const tag = await NfcManager.getTag();
+      for (const tech of technologies) {
+        try {
+          console.log(`Trying NFC technology: ${tech}`);
 
-      console.log("Real NFC tag scanned:", tag);
+          // Request NFC technology
+          await NfcManager.requestTechnology(tech);
 
-      // Clean up
-      await NfcManager.cancelTechnologyRequest();
+          // Get the tag
+          const tag = await NfcManager.getTag();
 
-      return tag;
+          console.log(`Successfully scanned tag with ${tech}:`, tag);
+
+          // Clean up
+          await NfcManager.cancelTechnologyRequest();
+
+          return tag;
+        } catch (techError) {
+          console.log(`Failed with ${tech}:`, techError);
+          // Continue to next technology
+          try {
+            await NfcManager.cancelTechnologyRequest();
+          } catch (cleanupError) {
+            console.log("Cleanup error:", cleanupError);
+          }
+        }
+      }
+
+      throw new Error("Aucune technologie NFC compatible trouvée");
     } catch (err) {
       console.error("Error scanning NFC:", err);
       setError(
@@ -184,10 +242,37 @@ export function useNfcScanner() {
 
     // Try to extract from NDEF message first
     if (tag.ndefMessage && tag.ndefMessage.length > 0) {
+      console.log("NDEF message found:", tag.ndefMessage);
       const text = extractTextFromNdefMessage(tag.ndefMessage);
       if (text) {
         console.log("Found text in NDEF message:", text);
         return text;
+      }
+    }
+
+    // Try to extract from tag data if available
+    if (tag.data && tag.data.length > 0) {
+      console.log("Tag data found:", tag.data);
+      try {
+        const text = new TextDecoder("utf-8").decode(new Uint8Array(tag.data));
+        console.log("Found text in tag data:", text);
+        return text;
+      } catch (error) {
+        console.log("Error decoding tag data:", error);
+      }
+    }
+
+    // Try to extract from tag payload if available
+    if (tag.payload && tag.payload.length > 0) {
+      console.log("Tag payload found:", tag.payload);
+      try {
+        const text = new TextDecoder("utf-8").decode(
+          new Uint8Array(tag.payload)
+        );
+        console.log("Found text in tag payload:", text);
+        return text;
+      } catch (error) {
+        console.log("Error decoding tag payload:", error);
       }
     }
 

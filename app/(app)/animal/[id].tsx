@@ -492,7 +492,7 @@ export default function AnimalDetailScreen() {
               )}
 
               {/* NFC ID Information */}
-              {animal.nfc_id && (
+              {/* {animal.nfc_id && (
                 <Stack marginTop="$4">
                   <XStack alignItems="center" space="$2" marginBottom="$2">
                     <MaterialCommunityIcons
@@ -541,7 +541,7 @@ export default function AnimalDetailScreen() {
                     </Text>
                   </Stack>
                 </Stack>
-              )}
+              )} */}
 
               {/* Pending Transfer Information */}
               {pendingTransfer && (
