@@ -29,11 +29,17 @@ export default function VaccinationsScreen() {
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [loading, setLoading] = useState(true);
   const [animalName, setAnimalName] = useState("");
+  const [animalOwnerId, setAnimalOwnerId] = useState<string>("");
+
+  useEffect(() => {
+    if (id) {
+      fetchAnimalName();
+    }
+  }, [id]);
 
   useEffect(() => {
     if (id) {
       fetchVaccinations();
-      fetchAnimalName();
     }
   }, [id]);
 
@@ -41,12 +47,13 @@ export default function VaccinationsScreen() {
     try {
       const { data, error } = await supabase
         .from("animals")
-        .select("name")
+        .select("name, owner_id")
         .eq("id", id)
         .single();
 
       if (error) throw error;
       setAnimalName(data?.name || "");
+      setAnimalOwnerId(data?.owner_id || "");
     } catch (error) {
       console.error("Error fetching animal name:", error);
     }
@@ -55,6 +62,7 @@ export default function VaccinationsScreen() {
   const fetchVaccinations = async () => {
     try {
       setLoading(true);
+      // Fetch vaccinations for all users (view-only for non-owners)
       const { data, error } = await supabase
         .from("vaccinations")
         .select("*")
@@ -160,16 +168,18 @@ export default function VaccinationsScreen() {
           style={styles.backButton}
         />
         <Text style={styles.headerTitle}>Vaccinations</Text>
-        <TouchableOpacity
-          onPress={() => router.push(`/animal/${id}/vaccinations/edit`)}
-          style={styles.editButton}
-        >
-          <MaterialCommunityIcons
-            name="pencil"
-            size={20}
-            color={theme.colors.primary.DEFAULT}
-          />
-        </TouchableOpacity>
+        {user?.id === animalOwnerId && (
+          <TouchableOpacity
+            onPress={() => router.push(`/animal/${id}/vaccinations/edit`)}
+            style={styles.editButton}
+          >
+            <MaterialCommunityIcons
+              name="pencil"
+              size={20}
+              color={theme.colors.primary.DEFAULT}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       <Text style={styles.animalName}>{animalName}</Text>

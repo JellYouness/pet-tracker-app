@@ -168,8 +168,8 @@ export default function AnimalDetailScreen() {
                 "https://api.dicebear.com/7.x/shapes/svg?seed=" + animal.name,
             }}
             style={{
-              width: "70%",
-              height: 250,
+              width: "50%",
+              height: 180,
               borderRadius: 125,
               backgroundColor: theme.colors.background.dark,
               marginHorizontal: "auto",
@@ -541,37 +541,39 @@ export default function AnimalDetailScreen() {
                 </Stack>
               )}
 
-              {/* Location Display */}
-              <Stack marginTop="$4">
-                <XStack alignItems="center" space="$2" marginBottom="$2">
-                  <MaterialCommunityIcons
-                    name="map-marker"
-                    size={20}
-                    color={theme.colors.primary.DEFAULT}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      color: theme.colors.text.DEFAULT,
+              {/* Location Display - only visible to owner */}
+              {user?.id === animal.owner_id && (
+                <Stack marginTop="$4">
+                  <XStack alignItems="center" space="$2" marginBottom="$2">
+                    <MaterialCommunityIcons
+                      name="map-marker"
+                      size={20}
+                      color={theme.colors.primary.DEFAULT}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        color: theme.colors.text.DEFAULT,
+                      }}
+                    >
+                      Localisation
+                    </Text>
+                  </XStack>
+                  <LocationDisplay
+                    animalId={animal.id}
+                    location={animal.locations}
+                    onLocationRemoved={() => {
+                      // Refresh the animal data when location is removed
+                      fetchAnimal();
                     }}
-                  >
-                    Localisation
-                  </Text>
-                </XStack>
-                <LocationDisplay
-                  animalId={animal.id}
-                  location={animal.locations}
-                  onLocationRemoved={() => {
-                    // Refresh the animal data when location is removed
-                    fetchAnimal();
-                  }}
-                  onLocationUpdated={() => {
-                    // Refresh the animal data when location is updated
-                    fetchAnimal();
-                  }}
-                />
-              </Stack>
+                    onLocationUpdated={() => {
+                      // Refresh the animal data when location is updated
+                      fetchAnimal();
+                    }}
+                  />
+                </Stack>
+              )}
 
               {/* <Stack marginTop="$4">
                 <Text
@@ -597,6 +599,7 @@ export default function AnimalDetailScreen() {
                   shadowOpacity: 0.1,
                   shadowRadius: 2,
                   elevation: 2,
+                  marginTop: 10,
                 }}
                 onPress={() => router.push(`/animal/${id}/vaccinations`)}
               >
@@ -703,6 +706,65 @@ export default function AnimalDetailScreen() {
                         }}
                       >
                         Allergies, médicaments, conditions chroniques et plus
+                      </Text>
+                    </Stack>
+                  </XStack>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color="#ccc"
+                  />
+                </XStack>
+              </TouchableOpacity>
+
+              {/* Gallery Section */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "white",
+                  padding: 20,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#e9ecef",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}
+                onPress={() => router.push(`/animal/${id}/gallery`)}
+              >
+                <XStack alignItems="center" justifyContent="space-between">
+                  <XStack alignItems="center" space="$3" flex={1}>
+                    <View
+                      style={{
+                        backgroundColor: "#fff3cd",
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 24 }}>📸</Text>
+                    </View>
+                    <Stack flex={1}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          color: theme.colors.text.DEFAULT,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Galerie Photos
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme.colors.text.light,
+                          fontSize: 14,
+                        }}
+                      >
+                        Voir et ajouter des photos de {animal.name}
                       </Text>
                     </Stack>
                   </XStack>

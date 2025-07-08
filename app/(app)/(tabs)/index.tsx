@@ -58,7 +58,7 @@ export default function HomeScreen() {
     };
 
     checkAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadData = async () => {
@@ -126,6 +126,14 @@ export default function HomeScreen() {
             >
               <MaterialCommunityIcons name="paw" size={24} color="#f39c12" />
               <Text style={styles.actionText}>Mes Animaux</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push("/map")}
+            >
+              <MaterialCommunityIcons name="map" size={24} color="#10b981" />
+              <Text style={styles.actionText}>Carte</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

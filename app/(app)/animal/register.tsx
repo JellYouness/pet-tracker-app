@@ -7,15 +7,18 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   Platform,
   ScrollView,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { Stack, XStack } from "tamagui";
 import { Button } from "../../../components/Button";
 import { Input } from "../../../components/Input";
+import NfcTagGenerator from "../../../components/NfcTagGenerator";
 import { theme } from "../../../constants/theme";
 import { useAuth } from "../../../contexts/AuthContext";
 import { supabase } from "../../../lib/supabase";
@@ -38,6 +41,7 @@ export default function RegisterAnimalScreen() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [nfcGeneratorVisible, setNfcGeneratorVisible] = useState(false);
 
   const handleImageUpload = async () => {
     try {
@@ -149,12 +153,19 @@ export default function RegisterAnimalScreen() {
     }
   };
 
+  const handleNfcGenerated = (nfcId: string) => {
+    setFormData({ ...formData, nfc: nfcId });
+  };
+
   const handleNfcScan = () => {
-    // const tag = await startScanning();
-    const tag = { id: "1234567854540" };
-    if (tag) {
-      setFormData({ ...formData, nfc: tag.id });
+    if (!formData.name.trim()) {
+      Alert.alert(
+        "Nom requis",
+        "Veuillez d'abord entrer le nom de l'animal avant de générer le tag NFC."
+      );
+      return;
     }
+    setNfcGeneratorVisible(true);
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -294,29 +305,83 @@ export default function RegisterAnimalScreen() {
             )}
           </Stack>
 
-          {/* add NFC scan button */}
-          <Button onPress={handleNfcScan} variant="outline">
-            <Stack
-              flexDirection="row"
-              alignItems="center"
-              justifyContent="center"
-              space="$2"
+          {/* NFC Section */}
+          <Stack>
+            <Text
+              style={{
+                marginBottom: 4,
+                color: theme.colors.text.DEFAULT,
+                fontWeight: "600",
+              }}
             >
-              <MaterialCommunityIcons
-                name="cellphone-nfc"
-                size={18}
-                color={theme.colors.primary.DEFAULT}
-              />
-              <Text
+              Tag NFC
+            </Text>
+
+            {formData.nfc ? (
+              <View
                 style={{
-                  color: theme.colors.primary.DEFAULT,
-                  fontSize: 16,
+                  backgroundColor: "#e8f5e8",
+                  borderRadius: 10,
+                  padding: 15,
+                  borderWidth: 1,
+                  borderColor: "#28a745",
+                  marginBottom: 12,
                 }}
               >
-                Scanner NFC
+                <XStack alignItems="center" space="$2">
+                  <MaterialCommunityIcons
+                    name="check-circle"
+                    size={20}
+                    color="#28a745"
+                  />
+                  <Text
+                    style={{
+                      color: "#28a745",
+                      fontWeight: "600",
+                      flex: 1,
+                    }}
+                  >
+                    Tag NFC configuré: {formData.nfc}
+                  </Text>
+                </XStack>
+              </View>
+            ) : (
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: theme.colors.text.light,
+                  marginBottom: 12,
+                  lineHeight: 20,
+                }}
+              >
+                Générez un tag NFC unique pour votre animal. Vous pourrez
+                l&apos;écrire sur une puce NFC physique avec une app externe.
               </Text>
-            </Stack>
-          </Button>
+            )}
+
+            <Button onPress={handleNfcScan} variant="outline">
+              <Stack
+                flexDirection="row"
+                alignItems="center"
+                justifyContent="center"
+                space="$2"
+              >
+                <MaterialCommunityIcons
+                  name={formData.nfc ? "tag-text" : "tag-plus"}
+                  size={18}
+                  color={theme.colors.primary.DEFAULT}
+                />
+                <Text
+                  style={{
+                    color: theme.colors.primary.DEFAULT,
+                    fontSize: 16,
+                  }}
+                >
+                  {formData.nfc ? "Modifier le tag NFC" : "Générer tag NFC"}
+                </Text>
+              </Stack>
+            </Button>
+          </Stack>
 
           {/* Vaccinations Section */}
           <Stack>
@@ -436,6 +501,14 @@ export default function RegisterAnimalScreen() {
           </Button>
         </Stack>
       </Stack>
+
+      {/* NFC Tag Generator Modal */}
+      <NfcTagGenerator
+        visible={nfcGeneratorVisible}
+        onClose={() => setNfcGeneratorVisible(false)}
+        onTagGenerated={handleNfcGenerated}
+        animalName={formData.name || "votre animal"}
+      />
     </ScrollView>
   );
 }

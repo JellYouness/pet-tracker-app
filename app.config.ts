@@ -32,6 +32,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "This app needs background location access to automatically track your pets' locations.",
       UIBackgroundModes: ["location", "background-processing"],
     },
+    config: {
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+    },
   },
   android: {
     adaptiveIcon: {
@@ -50,6 +53,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "FOREGROUND_SERVICE",
       "WAKE_LOCK",
     ],
+    config: {
+      googleMaps: {
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      },
+    },
   },
   web: {
     favicon: "./assets/favicon.png",

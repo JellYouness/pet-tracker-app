@@ -1,3 +1,8 @@
+import { Button } from "@/components/Button";
+import { theme } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Database } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -11,11 +16,6 @@ import {
   View,
 } from "react-native";
 import { Stack, XStack } from "tamagui";
-import { Button } from "@/components/Button";
-import { theme } from "@/constants/theme";
-import { useAuth } from "@/contexts/AuthContext";
-import type { Database } from "@/lib/supabase";
-import { supabase } from "@/lib/supabase";
 
 type Animal = Database["public"]["Tables"]["animals"]["Row"];
 
@@ -29,7 +29,7 @@ export default function MyAnimalsScreen() {
 
   useEffect(() => {
     fetchAnimals();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchAnimals = async () => {
@@ -112,12 +112,20 @@ export default function MyAnimalsScreen() {
           >
             Mes Animaux
           </Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push("/animal/register")}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="white" />
-          </TouchableOpacity>
+          <XStack space="$2">
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={() => router.push("/map")}
+            >
+              <MaterialCommunityIcons name="map" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => router.push("/animal/register")}
+            >
+              <MaterialCommunityIcons name="plus" size={24} color="white" />
+            </TouchableOpacity>
+          </XStack>
         </XStack>
 
         {error && (
@@ -248,6 +256,14 @@ export default function MyAnimalsScreen() {
 const styles = StyleSheet.create({
   addButton: {
     backgroundColor: theme.colors.primary.DEFAULT,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mapButton: {
+    backgroundColor: "#10b981",
     width: 40,
     height: 40,
     borderRadius: 20,
