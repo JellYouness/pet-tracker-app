@@ -209,13 +209,9 @@ export default function EditMedicalInfoScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         />
-        <Text style={styles.headerTitle}>
-          Modifier les informations médicales
-        </Text>
+        <Text style={styles.headerTitle}>{animalName}</Text>
         <View style={styles.headerSpacer} />
       </View>
-
-      <Text style={styles.animalName}>{animalName}</Text>
 
       <ScrollView
         style={styles.scrollView}

@@ -302,11 +302,9 @@ export default function EditVaccinationsScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         />
-        <Text style={styles.headerTitle}>Modifier les vaccinations</Text>
+        <Text style={styles.headerTitle}>{animalName}</Text>
         <View style={styles.headerSpacer} />
       </View>
-
-      <Text style={styles.animalName}>{animalName}</Text>
 
       <ScrollView
         style={styles.scrollView}

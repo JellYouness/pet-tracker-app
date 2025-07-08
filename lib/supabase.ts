@@ -160,47 +160,6 @@ export type Database = {
           updated_at?: string;
         };
       };
-      gps_devices: {
-        Row: {
-          id: string;
-          device_id: string;
-          name: string;
-          animal_id?: string;
-          owner_id: string;
-          device_type: string;
-          battery_level?: number;
-          is_active: boolean;
-          last_seen?: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          device_id: string;
-          name: string;
-          animal_id?: string;
-          owner_id: string;
-          device_type?: string;
-          battery_level?: number;
-          is_active?: boolean;
-          last_seen?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          device_id?: string;
-          name?: string;
-          animal_id?: string;
-          owner_id?: string;
-          device_type?: string;
-          battery_level?: number;
-          is_active?: boolean;
-          last_seen?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
       ownership_transfer_requests: {
         Row: {
           id: string;
@@ -269,53 +228,6 @@ export type Database = {
           is_primary?: boolean;
           created_at?: string;
           updated_at?: string;
-        };
-      };
-      gps_locations: {
-        Row: {
-          id: string;
-          device_id: string;
-          latitude: number;
-          longitude: number;
-          altitude?: number;
-          accuracy?: number;
-          speed?: number;
-          heading?: number;
-          address?: string;
-          signal_strength?: number;
-          battery_level?: number;
-          timestamp: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          device_id: string;
-          latitude: number;
-          longitude: number;
-          altitude?: number;
-          accuracy?: number;
-          speed?: number;
-          heading?: number;
-          address?: string;
-          signal_strength?: number;
-          battery_level?: number;
-          timestamp?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          device_id?: string;
-          latitude?: number;
-          longitude?: number;
-          altitude?: number;
-          accuracy?: number;
-          speed?: number;
-          heading?: number;
-          address?: string;
-          signal_strength?: number;
-          battery_level?: number;
-          timestamp?: string;
-          created_at?: string;
         };
       };
     };

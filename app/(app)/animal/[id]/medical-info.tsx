@@ -140,7 +140,7 @@ export default function MedicalInfoScreen() {
 
   const EmergencySection = () => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Informations d'urgence</Text>
+      <Text style={styles.sectionTitle}>Informations d&apos;urgence</Text>
       <Stack space="$3">
         <InfoCard
           title="Contact d'urgence"
@@ -259,7 +259,7 @@ export default function MedicalInfoScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         />
-        <Text style={styles.headerTitle}>Informations médicales</Text>
+        <Text style={styles.headerTitle}>{animalName}</Text>
         {user?.id === animalOwnerId && (
           <TouchableOpacity
             onPress={() => router.push(`/animal/${id}/medical-info/edit`)}
@@ -273,8 +273,6 @@ export default function MedicalInfoScreen() {
           </TouchableOpacity>
         )}
       </View>
-
-      <Text style={styles.animalName}>{animalName}</Text>
 
       <ScrollView
         style={styles.scrollView}

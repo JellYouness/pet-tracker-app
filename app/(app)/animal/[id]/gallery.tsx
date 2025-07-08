@@ -290,7 +290,7 @@ export default function AnimalGalleryScreen() {
         {/* Edit mode actions */}
         {isEditing && user?.id === animalOwnerId && (
           <XStack space="$1" marginTop="$1">
-            {!item.is_primary && (
+            {/* {!item.is_primary && (
               <TouchableOpacity
                 onPress={() => handleSetPrimary(item.id)}
                 style={{
@@ -307,7 +307,7 @@ export default function AnimalGalleryScreen() {
                   Principale
                 </Text>
               </TouchableOpacity>
-            )}
+            )} */}
 
             <TouchableOpacity
               onPress={() => handleDeletePhoto(item.id)}

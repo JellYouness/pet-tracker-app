@@ -2,7 +2,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -11,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { theme } from "../../../constants/theme";
-import { useNfcScanner } from "../../../hooks/useNfcScanner";
 import type { Database } from "../../../lib/supabase";
 import { supabase } from "../../../lib/supabase";
 
@@ -19,16 +17,9 @@ type Animal = Database["public"]["Tables"]["animals"]["Row"];
 
 export default function SearchScreen() {
   const router = useRouter();
-  const {
-    isSupported,
-    isEnabled,
-    error: nfcError,
-    startScanning,
-  } = useNfcScanner();
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [scanning, setScanning] = useState(false);
   const [animals, setAnimals] = useState<Animal[]>([]);
 
   const handleSearch = async () => {
@@ -60,79 +51,40 @@ export default function SearchScreen() {
   };
 
   const handleScanNfc = async () => {
-    // Check NFC support and permissions
-    if (!isSupported) {
-      Alert.alert(
-        "NFC non supporté",
-        "Votre appareil ne supporte pas le NFC ou l'application n'a pas les permissions nécessaires."
-      );
-      return;
-    }
+    // Mock NFC scanning for now
+    const tag = { id: "nfc-2345678901" };
+    if (tag) {
+      try {
+        setLoading(true);
+        setError(null);
 
-    if (!isEnabled) {
-      Alert.alert(
-        "NFC désactivé",
-        "Veuillez activer le NFC dans les paramètres de votre appareil."
-      );
-      return;
-    }
+        const { data, error } = await supabase
+          .from("animals")
+          .select("*")
+          .eq("nfc_id", tag.id)
+          .single();
 
-    try {
-      setScanning(true);
-      setError(null);
-      setLoading(true);
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
 
-      // Start NFC scanning
-      const tag = await startScanning();
-
-      if (!tag) {
-        setError("Aucun tag NFC détecté. Veuillez réessayer.");
-        return;
+        if (data) {
+          router.push({
+            pathname: "/animal/[id]",
+            params: { id: data.id },
+          });
+        } else {
+          setError("Aucun animal trouvé avec ce tag NFC");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Une erreur inconnue est survenue"
+        );
+      } finally {
+        setLoading(false);
       }
-
-      console.log("NFC Tag scanned:", tag);
-
-      // Extract NFC ID from the tag
-      let nfcId = "";
-
-      if (tag.id) {
-        // Use the tag ID directly
-        nfcId = tag.id;
-      }
-
-      if (!nfcId) {
-        setError("Impossible de lire l'ID NFC du tag. Veuillez réessayer.");
-        return;
-      }
-
-      console.log("Searching for animal with NFC ID:", nfcId);
-
-      // Search for animal with this NFC ID
-      const { data, error } = await supabase
-        .from("animals")
-        .select("*")
-        .eq("nfc_id", nfcId)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
-
-      if (data) {
-        // Animal found, navigate to animal details
-        router.push({
-          pathname: "/animal/[id]",
-          params: { id: data.id },
-        });
-      } else {
-        setError(`Aucun animal trouvé avec le tag NFC: ${nfcId}`);
-      }
-    } catch (err) {
-      console.error("NFC scanning error:", err);
-      setError(err instanceof Error ? err.message : "Erreur lors du scan NFC");
-    } finally {
-      setScanning(false);
-      setLoading(false);
     }
   };
 
@@ -152,26 +104,10 @@ export default function SearchScreen() {
         Rechercher un animal
       </Text>
 
-      {/* NFC Status Display */}
-      {nfcError && (
-        <View
-          style={{
-            backgroundColor: "#fff3cd",
-            borderColor: "#ffeaa7",
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "#856404", fontSize: 14 }}>⚠️ {nfcError}</Text>
-        </View>
-      )}
-
       {/* NFC Scan Button */}
       <TouchableOpacity
         style={{
-          backgroundColor: scanning ? "#ff6b35" : theme.colors.primary.DEFAULT,
+          backgroundColor: theme.colors.primary.DEFAULT,
           padding: 16,
           borderRadius: 8,
           alignItems: "center",
@@ -179,61 +115,25 @@ export default function SearchScreen() {
           opacity: loading ? 0.6 : 1,
         }}
         onPress={handleScanNfc}
-        disabled={loading || !isSupported || !isEnabled}
+        disabled={loading}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MaterialCommunityIcons
-            name={scanning ? "close-circle" : "cellphone-nfc"}
+            name="cellphone-nfc"
             size={20}
             color="white"
           />
           <Text style={{ color: "white", fontSize: 16, marginLeft: 8 }}>
-            {scanning
-              ? "Scan en cours..."
-              : !isSupported
-                ? "NFC non supporté"
-                : !isEnabled
-                  ? "NFC désactivé"
-                  : "Scanner NFC"}
+            Scanner NFC
           </Text>
         </View>
       </TouchableOpacity>
 
-      {/* NFC Instructions */}
-      {isSupported && isEnabled && (
-        <View
-          style={{
-            backgroundColor: "#e3f2fd",
-            borderColor: "#2196f3",
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "#1565c0", fontSize: 14, lineHeight: 20 }}>
-            📱 <Text style={{ fontWeight: "600" }}>Instructions NFC:</Text>
-            {"\n"}• Approchez votre téléphone du tag NFC de l&apos;animal{"\n"}•
-            Le scan se fait automatiquement{"\n"}• Vous serez redirigé vers les
-            détails de l&apos;animal
-          </Text>
-        </View>
-      )}
-
       {/* Error Display */}
       {error && (
-        <View
-          style={{
-            backgroundColor: "#f8d7da",
-            borderColor: "#f5c6cb",
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: "#721c24", textAlign: "center" }}>{error}</Text>
-        </View>
+        <Text style={{ color: "red", textAlign: "center", marginBottom: 16 }}>
+          {error}
+        </Text>
       )}
 
       {/* Divider */}
@@ -379,13 +279,6 @@ export default function SearchScreen() {
                       {animal.race} •{" "}
                       {animal.gender === "male" ? "Mâle" : "Femelle"}
                     </Text>
-                    {animal.nfc_id && (
-                      <Text
-                        style={{ color: "#999", fontSize: 12, marginTop: 2 }}
-                      >
-                        NFC: {animal.nfc_id}
-                      </Text>
-                    )}
                   </View>
                   <MaterialCommunityIcons
                     name="chevron-right"

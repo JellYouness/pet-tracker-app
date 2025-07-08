@@ -167,22 +167,20 @@ export default function VaccinationsScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         />
-        <Text style={styles.headerTitle}>Vaccinations</Text>
+        <Text style={styles.headerTitle}>{animalName}</Text>
         {user?.id === animalOwnerId && (
-          <TouchableOpacity
-            onPress={() => router.push(`/animal/${id}/vaccinations/edit`)}
-            style={styles.editButton}
-          >
-            <MaterialCommunityIcons
-              name="pencil"
-              size={20}
-              color={theme.colors.primary.DEFAULT}
-            />
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push(`/animal/${id}/vaccinations/edit`)}
+          style={styles.editButton}
+        >
+          <MaterialCommunityIcons
+            name="pencil"
+            size={20}
+            color={theme.colors.primary.DEFAULT}
+          />
+        </TouchableOpacity>
         )}
       </View>
-
-      <Text style={styles.animalName}>{animalName}</Text>
 
       <ScrollView
         style={styles.scrollView}

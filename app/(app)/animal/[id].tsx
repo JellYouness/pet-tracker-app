@@ -491,6 +491,58 @@ export default function AnimalDetailScreen() {
                 </Stack>
               )}
 
+              {/* NFC ID Information */}
+              {animal.nfc_id && (
+                <Stack marginTop="$4">
+                  <XStack alignItems="center" space="$2" marginBottom="$2">
+                    <MaterialCommunityIcons
+                      name="cellphone-nfc"
+                      size={20}
+                      color={theme.colors.primary.DEFAULT}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        color: theme.colors.text.DEFAULT,
+                      }}
+                    >
+                      ID NFC
+                    </Text>
+                  </XStack>
+                  <Stack
+                    padding="$3"
+                    borderRadius="$3"
+                    style={{
+                      backgroundColor: "#f8f9fa",
+                      borderWidth: 1,
+                      borderColor: "#e9ecef",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontFamily: "monospace",
+                        fontWeight: "600",
+                        color: theme.colors.text.DEFAULT,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {animal.nfc_id}
+                    </Text>
+                    <Text
+                      style={{
+                        color: theme.colors.text.light,
+                        fontSize: 14,
+                      }}
+                    >
+                      Cet ID NFC peut être utilisé pour identifier {animal.name}{" "}
+                      via le scanner NFC
+                    </Text>
+                  </Stack>
+                </Stack>
+              )}
+
               {/* Pending Transfer Information */}
               {pendingTransfer && (
                 <Stack
@@ -830,6 +882,24 @@ export default function AnimalDetailScreen() {
                       onPress={() => router.push(`/animal/change-owner/${id}`)}
                     >
                       Changer de propriétaire
+                    </Button>
+                  </Stack>
+
+                  <Stack flex={1} marginTop="$4">
+                    <Button
+                      variant="outline"
+                      onPress={() => router.push(`/animal/${id}/nfc-update`)}
+                    >
+                      <XStack alignItems="center" space="$2">
+                        <MaterialCommunityIcons
+                          name="cellphone-nfc"
+                          size={20}
+                          color={theme.colors.primary.DEFAULT}
+                        />
+                        <Text style={{ color: theme.colors.primary.DEFAULT }}>
+                          Mettre à jour NFC
+                        </Text>
+                      </XStack>
                     </Button>
                   </Stack>
 

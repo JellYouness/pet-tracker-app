@@ -50,7 +50,7 @@ const OcrComponent = ({ onSuccess }: OcrComponentProps) => {
     if (status !== "granted") {
       Alert.alert(
         "Permission Required",
-        "Please allow access to your camera to scan your CIN."
+        "Please allow access to your photo library to upload a photo."
       );
       return;
     }
@@ -117,7 +117,7 @@ const OcrComponent = ({ onSuccess }: OcrComponentProps) => {
           marginBottom: 30,
         }}
       >
-        Scanner votre CIN pour commencer l&apos;inscription
+        Scanner votre CIN pour continuer
       </Title>
       <TouchableOpacity
         style={styles.iconButton}
