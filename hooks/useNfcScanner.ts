@@ -3,7 +3,7 @@ import NfcManager, { NfcTech } from "react-native-nfc-manager";
 
 // Mock NFC tag data for development
 const MOCK_NFC_TAG = {
-  id: "mock-nfc-id-123",
+  id: "PET-1751935548641-A9JE88",
   type: "mock-type",
   techList: ["mock-tech"],
 };

@@ -6,6 +6,7 @@ import {
   Alert,
   Modal,
   Platform,
+  ScrollView,
   Share,
   Text,
   TouchableOpacity,
@@ -215,7 +216,7 @@ export default function NfcTagGenerator({
           padding: 20,
         }}
       >
-        <View
+        <ScrollView
           style={{
             backgroundColor: "white",
             borderRadius: 20,
@@ -260,7 +261,7 @@ export default function NfcTagGenerator({
               }}
             >
               Générez un ID NFC unique pour {animalName}, puis utilisez une app
-              externe pour l'écrire sur votre tag NFC.
+              externe pour l&apos;écrire sur votre tag NFC.
             </Text>
 
             {/* Generate Button */}
@@ -342,7 +343,7 @@ export default function NfcTagGenerator({
                     marginBottom: 8,
                   }}
                 >
-                  Copiez cet ID et utilisez une app NFC pour l'écrire sur votre
+                  Copiez cet ID et utilisez une app NFC pour l&apos;écrire sur votre
                   tag:
                 </Text>
 
@@ -445,7 +446,7 @@ export default function NfcTagGenerator({
                     </XStack>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     onPress={openTagWriterApp}
                     style={{
                       backgroundColor: "#0066cc",
@@ -470,7 +471,7 @@ export default function NfcTagGenerator({
                         Ouvrir TagWriter NXP
                       </Text>
                     </XStack>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </Stack>
 
                 {/* Instructions */}
@@ -490,12 +491,12 @@ export default function NfcTagGenerator({
                     }}
                   >
                     📱 Instructions:{"\n"}
-                    1. Copiez l'ID NFC ci-dessus{"\n"}
+                    1. Copiez l&apos;ID NFC ci-dessus{"\n"}
                     2. Ouvrez une app NFC (NFC Tools ou TagWriter){"\n"}
-                    3. Sélectionnez "Écrire" → "Enregistrement de données" →
-                    "Texte"{"\n"}
-                    4. Collez l'ID NFC et écrivez sur votre tag{"\n"}
-                    5. Revenez ici et cliquez "Utiliser ce tag"
+                    3. Sélectionnez &quot;Écrire&quot; → &quot;Enregistrement de données&quot; →
+                    &quot;Texte&quot;{"\n"}
+                    4. Collez l&apos;ID NFC et écrivez sur votre tag{"\n"}
+                    5. Revenez ici et cliquez &quot;Utiliser ce tag&quot;
                   </Text>
                 </View>
 
@@ -508,6 +509,7 @@ export default function NfcTagGenerator({
                     borderRadius: 12,
                     alignItems: "center",
                     marginTop: 8,
+                    marginBottom: 20,
                   }}
                 >
                   <XStack space="$2" alignItems="center">
@@ -530,7 +532,7 @@ export default function NfcTagGenerator({
               </Stack>
             )}
           </Stack>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );

@@ -384,7 +384,7 @@ export default function RegisterAnimalScreen() {
           </Stack>
 
           {/* Vaccinations Section */}
-          <Stack>
+          {/* <Stack>
             <Text
               style={{
                 fontWeight: "bold",
@@ -477,7 +477,7 @@ export default function RegisterAnimalScreen() {
                 </Text>
               </XStack>
             </Button>
-          </Stack>
+          </Stack> */}
 
           {error && (
             <Text
